@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Curio — Prueba de registro e inicio de sesión</title>
+  <style>
+    :root {
+      --paper: #faf6f3;
+      --ink: #2b1f2d;
+      --card: #ffffff;
+      --border: #ecdfe1;
+      --muted: #8a7b85;
+      --berry: #b33951;
+      --berry-hover: #922e42;
+      --blush: #f3d9df;
+      --success: #3f8f6b;
+      --error: #c14a4a;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .brand-font {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+        "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 700;
+    }
+
+    .board {
+      position: fixed;
+      inset: 0;
+      columns: 5 160px;
+      column-gap: 14px;
+      padding: 14px;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .board figure {
+      margin: 0 0 14px;
+      break-inside: avoid;
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--blush);
+      box-shadow: 0 6px 18px rgba(43,31,45,.08);
+    }
+
+    .board img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      filter: saturate(.92);
+    }
+
+    .board::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(250,246,243,.55), rgba(250,246,243,.93) 60%);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 32px 16px;
+    }
+
+    .panel { width: min(100%, 380px); }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 38px 32px 24px;
+      text-align: center;
+      box-shadow: 0 22px 60px rgba(43,31,45,.16);
+      transform: rotate(-1.1deg);
+    }
+
+    .pin-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--berry);
+      margin: 0 auto 14px;
+    }
+
+    .brand {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0 0 4px;
+      letter-spacing: -0.5px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 22px;
+    }
+
+    .mode-toggle {
+      display: flex;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 4px;
+      margin-bottom: 22px;
+    }
+
+    .mode-toggle button {
+      flex: 1;
+      border: 0;
+      background: transparent;
+      padding: 8px 0;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--muted);
+      cursor: pointer;
+    }
+
+    .mode-toggle button.active {
+      background: var(--berry);
+      color: #fff;
+    }
+
+    form { display: grid; gap: 12px; }
+    form.hidden { display: none; }
+
+    .field { position: relative; text-align: left; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 10px 12px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--berry);
+      background: #fff;
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 30px;
+      right: 10px;
+      border: 0;
+      background: transparent;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .submit-btn {
+      margin-top: 8px;
+      height: 42px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--berry);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .submit-btn:hover { background: var(--berry-hover); }
+    .submit-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .message {
+      min-height: 22px;
+      margin-top: 16px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .message.error { color: var(--error); }
+    .message.success { color: var(--success); font-weight: 700; }
+
+    .devbox {
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px 18px;
+      font-size: 12px;
+      color: var(--muted);
+      box-shadow: 0 12px 30px rgba(43,31,45,.08);
+      text-align: left;
+    }
+
+    .devbox summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .devbox table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 11px;
+    }
+
+    .devbox th, .devbox td {
+      text-align: left;
+      padding: 6px 4px;
+      border-bottom: 1px solid var(--border);
+      word-break: break-all;
+    }
+
+    footer {
+      position: relative;
+      z-index: 1;
+      padding: 24px 16px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 700px) {
+      .board { columns: 3 120px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="board" aria-hidden="true">
+    <figure><img src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1493663284031-b7e3aefcae8e?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1523419409543-a5e549c1faa8?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1447752875215-b2761acb3c5d?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1504198266287-1659872e6590?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1483728642387-6c3bdd6c93e5?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+    <figure><img src="https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?auto=format&fit=crop&w=400&q=60" alt="" loading="lazy" /></figure>
+  </div>
+
+  <main>
+    <section class="panel">
+      <div class="card">
+        <div class="pin-dot"></div>
+        <div class="brand brand-font">Curio</div>
+        <div class="subtitle">Para ver el perfil, inicia sesión</div>
+
+        <div class="mode-toggle">
+          <button type="button" id="tabLogin" class="active">Entrar</button>
+          <button type="button" id="tabRegister">Registrarse</button>
+        </div>
+
+        <form id="loginForm" novalidate>
+          <div class="field">
+            <label for="loginUsername">Usuario</label>
+            <input id="loginUsername" type="text" placeholder="Tu usuario" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="loginPassword">Contraseña</label>
+            <input id="loginPassword" type="password" placeholder="Tu contraseña" autocomplete="off" />
+            <button class="toggle-password" type="button" data-target="loginPassword">Mostrar</button>
+          </div>
+          <button class="submit-btn" id="loginButton" type="submit" disabled>Entrar</button>
+        </form>
+
+        <form id="registerForm" class="hidden" novalidate>
+          <div class="field">
+            <label for="registerUsername">Nuevo usuario</label>
+            <input id="registerUsername" type="text" placeholder="Elige un usuario" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="registerPassword">Nueva contraseña</label>
+            <input id="registerPassword" type="password" placeholder="Elige una contraseña" autocomplete="off" />
+            <button class="toggle-password" type="button" data-target="registerPassword">Mostrar</button>
+          </div>
+          <button class="submit-btn" id="registerButton" type="submit" disabled>Crear cuenta</button>
+        </form>
+
+        <div class="message" id="message" role="status" aria-live="polite"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <footer>
+    Página de prueba local con backend real (Express + SQLite). No usar en producción tal cual.
+  </footer>
+
+  <script>
+    const tabLogin = document.getElementById("tabLogin");
+    const tabRegister = document.getElementById("tabRegister");
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const message = document.getElementById("message");
+
+    const loginUsername = document.getElementById("loginUsername");
+    const loginPassword = document.getElementById("loginPassword");
+    const loginButton = document.getElementById("loginButton");
+
+    const registerUsername = document.getElementById("registerUsername");
+    const registerPassword = document.getElementById("registerPassword");
+    const registerButton = document.getElementById("registerButton");
+
+    function setMode(mode) {
+      const isLogin = mode === "login";
+      tabLogin.classList.toggle("active", isLogin);
+      tabRegister.classList.toggle("active", !isLogin);
+      loginForm.classList.toggle("hidden", !isLogin);
+      registerForm.classList.toggle("hidden", isLogin);
+      message.className = "message";
+      message.textContent = "";
+    }
+
+    tabLogin.addEventListener("click", () => setMode("login"));
+    tabRegister.addEventListener("click", () => setMode("register"));
+
+    document.querySelectorAll(".toggle-password").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const target = document.getElementById(btn.dataset.target);
+        const hidden = target.type === "password";
+        target.type = hidden ? "text" : "password";
+        btn.textContent = hidden ? "Ocultar" : "Mostrar";
+      });
+    });
+
+    function updateLoginButton() {
+      loginButton.disabled = !(loginUsername.value.trim() && loginPassword.value.trim());
+    }
+    function updateRegisterButton() {
+      registerButton.disabled = !(registerUsername.value.trim() && registerPassword.value.trim());
+    }
+    loginUsername.addEventListener("input", updateLoginButton);
+    loginPassword.addEventListener("input", updateLoginButton);
+    registerUsername.addEventListener("input", updateRegisterButton);
+    registerPassword.addEventListener("input", updateRegisterButton);
+
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.className = "message";
+      message.textContent = "Comprobando…";
+
+      try {
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: loginUsername.value.trim(),
+            password: loginPassword.value,
+          }),
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          message.className = "message success";
+          message.textContent = data.message;
+        } else {
+          message.className = "message error";
+          message.textContent = data.error || "No se pudo iniciar sesión.";
+        }
+      } catch (err) {
+        message.className = "message error";
+        message.textContent = "No se pudo conectar con el servidor.";
+      }
+    });
+
+    registerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      message.className = "message";
+      message.textContent = "Creando cuenta…";
+
+      try {
+        const res = await fetch("/api/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: registerUsername.value.trim(),
+            password: registerPassword.value,
+          }),
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          message.className = "message success";
+          message.textContent = data.message + " Ya puedes iniciar sesión.";
+          registerForm.reset();
+          registerButton.disabled = true;
+          setTimeout(() => setMode("login"), 900);
+        } else {
+          message.className = "message error";
+          message.textContent = data.error || "No se pudo crear la cuenta.";
+        }
+      } catch (err) {
+        message.className = "message error";
+        message.textContent = "No se pudo conectar con el servidor.";
+      }
+    });
+  </script>
+</body>
+</html>
