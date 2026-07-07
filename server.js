@@ -1,7 +1,6 @@
 const path = require("path");
 const express = require("express");
 const Database = require("better-sqlite3");
-const bcrypt = require("bcryptjs");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -14,7 +13,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
+    password_plain TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   )
 `);
@@ -36,13 +35,14 @@ app.post("/api/register", (req, res) => {
     return res.status(400).json({ ok: false, error: "La contraseña debe tener al menos 4 caracteres." });
   }
 
+  // NOTA: contraseñas guardadas SIN hash, solo para pruebas locales.
+  // Esto NUNCA debe hacerse en una aplicación real.
   const existing = db.prepare("SELECT id FROM users WHERE username = ?").get(username.trim());
   if (existing) {
     return res.status(409).json({ ok: false, error: "Ese usuario ya existe." });
   }
 
-  const passwordHash = bcrypt.hashSync(password, 10);
-  db.prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)").run(username.trim(), passwordHash);
+  db.prepare("INSERT INTO users (username, password_plain) VALUES (?, ?)").run(username.trim(), password);
 
   return res.json({ ok: true, message: "Usuario creado correctamente." });
 });
@@ -56,16 +56,16 @@ app.post("/api/login", (req, res) => {
   }
 
   const user = db.prepare("SELECT * FROM users WHERE username = ?").get(username.trim());
-  if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+  if (!user || user.password_plain !== password) {
     return res.status(401).json({ ok: false, error: "Usuario o contraseña incorrectos." });
   }
 
   return res.json({ ok: true, message: "Acceso correcto." });
 });
 
-// --- Dev-only: list stored users (never returns plaintext passwords) ---
+// --- Dev-only: list stored users (passwords stored in plain text — TEST ONLY) ---
 app.get("/api/users", (req, res) => {
-  const rows = db.prepare("SELECT id, username, password_hash, created_at FROM users ORDER BY id DESC").all();
+  const rows = db.prepare("SELECT id, username, password_plain, created_at FROM users ORDER BY id DESC").all();
   res.json({ ok: true, users: rows });
 });
 
