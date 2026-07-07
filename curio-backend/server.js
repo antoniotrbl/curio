@@ -44,7 +44,7 @@ app.post("/api/register", (req, res) => {
   const passwordHash = bcrypt.hashSync(password, 10);
   db.prepare("INSERT INTO users (username, password_hash) VALUES (?, ?)").run(username.trim(), passwordHash);
 
-  return res.json({ ok: true, message: "Usuario creado correctamente." });
+  return res.json({ ok: true, message: "Usuario creado correctamente TEST-999." });
 });
 
 // --- Log in an existing user ---
